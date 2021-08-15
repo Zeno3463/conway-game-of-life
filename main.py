@@ -8,15 +8,13 @@ WIDTH = 500
 HEIGHT = 500
 SCREEN = display.set_mode([WIDTH, HEIGHT])
 GREY = (50, 50, 50)
-BLOCK_SIZE = 10
+WHITE = (100, 100, 100)
+BLACK = (0, 0, 0)
+BLOCK_SIZE = 20
 running = True
+start_simulation = False
 grid = numpy.zeros((WIDTH // BLOCK_SIZE, HEIGHT // BLOCK_SIZE))
 
-grid[10, 10] = 1
-grid[10, 11] = 1
-grid[10, 12] = 1
-grid[9, 12] = 1
-grid[8, 11] = 1
 
 def draw_grid():
 	for x in range(0, WIDTH, BLOCK_SIZE):
@@ -28,14 +26,19 @@ def draw_grid():
 
 def click(pos):
 	y, x = pos
-	grid[x // BLOCK_SIZE, y // BLOCK_SIZE] = 1
+	# invert the state of the block the user clicked
+	grid[x // BLOCK_SIZE, y // BLOCK_SIZE] = 1 if not grid[x // BLOCK_SIZE, y // BLOCK_SIZE] else 0
 
 def next_gen():
-	time.wait(500)
-	new_grid = grid
+	# delay for 0.5 second
+	time.wait(100)
+	new_grid = numpy.zeros_like(grid)
+
+	# iterate through all blocks in the grid
 	for x in range(len(grid)):
 		for y in range(len(grid[x])):
 			live_neighbors_count = 0
+			# iterate through all the the block's neighbors. If the neighbor is live, increment the live_neighbors count.
 			try: 
 				if grid[x-1, y-1]: live_neighbors_count += 1
 			except: pass
@@ -61,11 +64,17 @@ def next_gen():
 				if grid[x+1, y+1]: live_neighbors_count += 1
 			except: pass
 
-			if (live_neighbors_count < 2 or live_neighbors_count > 3) and grid[x, y]:
-				new_grid[x, y] = 0
-			elif not grid[x, y] and live_neighbors_count == 3:
+			# any live cell with two or three neighbors survive
+			# any dead cell with three live neighbors becomes a live cell
+			# other live cells die in the next generation
+			# other dead cells stay dead
+			if grid[x, y] and (live_neighbors_count == 2 or live_neighbors_count == 3):
 				new_grid[x, y] = 1
+			elif live_neighbors_count == 3:
+				new_grid[x, y] = 1
+
 	return new_grid
+
 
 while running:
 	for event in pygame.event.get():
@@ -73,9 +82,12 @@ while running:
 			running = False
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			click(pygame.mouse.get_pos())
-	SCREEN.fill((0, 0, 0))
+		if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+			start_simulation = not start_simulation
+
+	SCREEN.fill(WHITE)
 	draw_grid()
 	display.update()
-	grid = next_gen()
+	if start_simulation: grid = next_gen()
 
 pygame.quit()
