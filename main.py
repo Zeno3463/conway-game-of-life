@@ -30,7 +30,7 @@ def click(pos):
 	grid[x // BLOCK_SIZE, y // BLOCK_SIZE] = 1 if not grid[x // BLOCK_SIZE, y // BLOCK_SIZE] else 0
 
 def next_gen():
-	# delay for 0.5 second
+	# delay for 0.1 second
 	time.wait(100)
 	new_grid = numpy.zeros_like(grid)
 
